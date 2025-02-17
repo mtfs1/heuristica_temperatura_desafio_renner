@@ -1,4 +1,7 @@
+import copy
+import random
 from datetime import datetime
+from itertools import chain
 
 
 type QuantidadeItem = int
@@ -82,3 +85,52 @@ def gera_documentos_reservas(
 
     return reservas
 
+
+def alocacao_reservas(
+    estoque: Estoque, reservas: list[Reserva], probabilidade: float
+) -> Estoque:
+
+    estoque = copy.deepcopy(estoque)
+
+    while reservas:
+        reserva = reservas.pop()
+        loop_corredores = True
+        precisa_dividir = False
+
+        while loop_corredores:
+            divisivel = False
+            if precisa_dividir:
+                divisivel = True
+            precisa_dividir = True
+
+            for corredor in chain.from_iterable(estoque):
+                item = reserva["item"]
+                quantidade = reserva["quantidade"]
+                espaco = corredor["disponivel"][item]
+
+                tem_espaco = espaco >= quantidade
+                if tem_espaco:
+                    precisa_dividir = False
+
+                if random.random() > probabilidade:
+                    continue
+
+                if not tem_espaco:
+                    if not divisivel:
+                        continue
+
+                    if espaco == 0:
+                        continue
+
+                    nova_reserva = copy.deepcopy(reserva)
+                    nova_reserva["quantidade"] = quantidade - espaco
+                    reservas.append(nova_reserva)
+                    reserva["quantidade"] = espaco
+                    quantidade = espaco
+
+                corredor["disponivel"][item] -= quantidade
+                corredor["reservas"].append(reserva)
+                loop_corredores = False
+                break
+
+    return estoque
