@@ -18,6 +18,13 @@ dir_arquivos = os.path.join(
 )
 
 
+CAPACIDADE_ONDA = 6000
+NUMERO_MAXIMO_ONDAS = 10
+PESO_DISTANCIA = 1
+PESO_ANDAR = 1
+PROBABILIDADE_ALOCACAO_RESERVA = 0.5
+
+
 def main():
     print(f"[{datetime.now()}][HEURISTICA TEMPERATURA][START]")
 
@@ -33,10 +40,14 @@ def main():
 
     estoque, caixas = transforma_dados_de_entrada(estoque, caixas)
     estoque = gera_estrutura_estoque(estoque)
-    reservas = gera_documentos_reservas(caixas, 1, 6000)
+    reservas = gera_documentos_reservas(
+        caixas, NUMERO_MAXIMO_ONDAS, CAPACIDADE_ONDA
+    )
 
-    estoque = alocacao_reservas(estoque, reservas, 0.5)
-    objetivo = calcula_funcao_objetivo(estoque, 1, 1)
+    estoque = alocacao_reservas(
+        estoque, reservas, PROBABILIDADE_ALOCACAO_RESERVA
+    )
+    objetivo = calcula_funcao_objetivo(estoque, PESO_DISTANCIA, PESO_ANDAR)
 
     temperaturas = [
         {
@@ -59,8 +70,12 @@ def main():
             novo_estoque, retiradas = retira_reservas(
                 estoque, temperatura["probabilidade"]
             )
-            novo_estoque = alocacao_reservas(novo_estoque, retiradas, 0.5)
-            novo_objetivo = calcula_funcao_objetivo(novo_estoque, 1, 1)
+            novo_estoque = alocacao_reservas(
+                novo_estoque, retiradas, PROBABILIDADE_ALOCACAO_RESERVA
+            )
+            novo_objetivo = calcula_funcao_objetivo(
+                novo_estoque, PESO_DISTANCIA, PESO_ANDAR
+            )
 
             if novo_objetivo < objetivo:
                 objetivo = novo_objetivo
