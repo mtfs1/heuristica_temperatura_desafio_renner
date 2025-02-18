@@ -185,3 +185,27 @@ def calcula_funcao_objetivo(
 
     return funcao_objetivo
 
+
+def retira_reservas(
+    estoque: Estoque, probabilidade: float
+) -> tuple[Estoque, list[Reserva]]:
+
+    estoque = copy.deepcopy(estoque)
+
+    retiradas = []
+    for andar in estoque:
+        for corredor in andar:
+            for r in range(len(corredor["reservas"]) - 1, -1, -1):
+                if random.random() > probabilidade:
+                    continue
+
+                reserva = corredor["reservas"].pop(r)
+
+                item = reserva["item"]
+                quantidade = reserva["quantidade"]
+                corredor["disponivel"][item] += quantidade
+
+                retiradas.append(reserva)
+
+    return estoque, retiradas
+
