@@ -1,4 +1,5 @@
 import copy
+import math
 import random
 from datetime import datetime
 from itertools import chain
@@ -134,3 +135,53 @@ def alocacao_reservas(
                 break
 
     return estoque
+
+
+def calcula_funcao_objetivo(
+    estoque: Estoque, peso_distancia: float, peso_andar: float
+) -> float:
+
+    def x(corredor: int):
+        return math.ceil(corredor / 2)
+
+    corredores_andares = dict()
+    for a, andar in enumerate(estoque):
+        for c, corredor in enumerate(andar, start=1):
+            for reserva in corredor["reservas"]:
+                onda = reserva["onda"]
+                if onda not in corredores_andares:
+                    corredores_andares[onda] = dict()
+
+                if a not in corredores_andares[onda]:
+                    corredores_andares[onda][a] = {
+                        "mais_distante": 0,
+                        "menos_distante": float("inf"),
+                        "num_corredores": 0,
+                        "corredores_vistos": [],
+                    }
+
+                corredor_dict = corredores_andares[onda][a]
+
+                dist = "mais_distante"
+                corredor_dict[dist] = max(corredor_dict[dist], x(c))
+
+                mdist = "menos_distante"
+                corredor_dict[mdist] = min(corredor_dict[mdist], x(c))
+
+                if c not in corredor_dict["corredores_vistos"]:
+                    corredor_dict["corredores_vistos"].append(c)
+                    corredor_dict["num_corredores"] += 1
+
+    funcao_objetivo = 0
+    for onda in corredores_andares.values():
+        for andar in onda.values():
+            funcao_objetivo += (
+                andar["mais_distante"] - andar["menos_distante"]
+            ) * peso_distancia
+
+            funcao_objetivo += andar["num_corredores"]
+
+        funcao_objetivo += len(onda) * peso_andar
+
+    return funcao_objetivo
+
